@@ -1,6 +1,9 @@
 import { Disclosure } from "@headlessui/react";
 import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
+import { auth } from "../../util/firebase";
 
 const navigation = [
   { name: "Home", href: "/", current: true },
@@ -12,8 +15,22 @@ const navigation = [
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
-
+const handleSignOut = async () => {
+  await signOut(auth)
+}
 export default function Navbar() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  useEffect(() => {
+    const listener = onAuthStateChanged(auth, async (user) => {
+      setIsAuthenticated(Boolean(user))
+    });
+
+    return () => {
+      listener()
+    }
+  }, [])
+
   return (
     <Disclosure as="nav" className="bg-gray-800">
       {({ open }) => (
@@ -51,10 +68,15 @@ export default function Navbar() {
                       </NavLink>
                     </>
                   ))}
+                  {isAuthenticated && (
+                    <button onClick={handleSignOut} className="rounded-md px-3 py-2 text-sm font-medium text-gray-300 hover:bg-gray-700 hover:text-white bg-purple-600 ">Signout</button>
+                  )}
                 </div>
               </div>
             </div>
           </div>
+
+          {isAuthenticated && <p className="text-white">{auth?.currentUser?.email}</p>}
 
           <Disclosure.Panel className="sm:hidden">
             <div className="space-y-1 px-2 pt-2 pb-3">

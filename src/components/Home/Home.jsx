@@ -1,39 +1,41 @@
+import { onAuthStateChanged } from "firebase/auth";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 import React, { useState, useEffect } from "react";
-
+import { auth, db } from "../../util/firebase"
 // This is just for illustrating purposes. Please don't rely on it.
-const TODO_EXAMPLE = [
-  {
-    uid: "IOUASD0123jl??M<OP@&#",
-    name: "Get Milk",
-  },
-  {
-    uid: "IOUASD0123jl??M<OP@&#",
-    name: "Get Water",
-  },
-  {
-    uid: "IOUASD0123jl??M<OP@&#",
-    name: "Finish Canvas",
-  },
-];
 
 const Home = () => {
   const [todo, setTodo] = useState();
   const [todos, setTodos] = useState([]);
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+
+  const todoCollectionRef = collection(db, "todos")
 
   const getListOfTodos = async () => {
     // Write the code to get the todo list here
+    const data = await getDocs(todoCollectionRef)
+    const todos = data.docs.map(doc => ({ ...doc.data(), id: doc.id }))
+    setTodos(todos)
   };
 
   const addTodo = async (e) => {
     e.preventDefault();
     // Write the code to add a new todo here. Remember that it should include the uid so it can be filtered.
+    await addDoc(todoCollectionRef, { name: todo, uid: auth.currentUser.uid })
     getListOfTodos();
   };
 
+
   useEffect(() => {
     getListOfTodos();
-  }, []);
+    const listener = onAuthStateChanged(auth, async (user) => {
+      setIsAuthenticated(Boolean(user))
+    });
 
+    return () => {
+      listener()
+    }
+  }, []);
   return (
     <div>
       <div className="flex min-h-full flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -45,7 +47,7 @@ const Home = () => {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <form className="space-y-6" onSubmit={addTodo}>
+            {isAuthenticated && <form className="space-y-6" onSubmit={addTodo}>
               <div>
                 <label
                   htmlFor="todo"
@@ -75,14 +77,13 @@ const Home = () => {
                   Add todo
                 </button>
               </div>
-            </form>
+            </form>}
+
             <br />
             <h1>Todos</h1>
             <ul className="divide-y divide-gray-200">
               {/* The code below should be changed to get the data from the docs */}
-              {TODO_EXAMPLE.filter(
-                (todo) => todo.uid === "IOUASD0123jl??M<OP@&#"
-              ).map((todo) => {
+              {isAuthenticated && todos.filter(todo => todo.uid === auth?.currentUser?.uid).map((todo) => {
                 return (
                   <li
                     key={todo.id}

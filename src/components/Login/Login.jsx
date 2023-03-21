@@ -9,7 +9,7 @@ export default function Login() {
 
   const signIn = async (e) => {
     e.preventDefault();
-    // Write your signIn code here
+    await signInWithEmailAndPassword(auth, email, password)
   };
 
   return (
