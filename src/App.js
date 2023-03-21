@@ -5,11 +5,13 @@ import Home from "./components/Home/Home";
 import Login from "./components/Login/Login";
 import Signup from "./components/SignUp/Signup";
 import Profile from "./components/Profile/Profile";
+import { auth } from "./util/firebase";
 
 function App() {
   return (
     <>
       <BrowserRouter>
+        {auth?.currentUser?.email}
         <Navbar />
         <Routes>
           <Route path="/" exact element={<Home />} />
